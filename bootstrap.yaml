@@ -3,13 +3,13 @@ ScoreThreshold: 0.1
 NmsOverlapThreshold: 0.2
 UseOnnx: false 
 
-PfeOnnx: /home/ubuntu/OpenPCDet/output/cbgs_pp_multihead_pfe.onnx
-BackboneOnnx: /home/ubuntu/OpenPCDet/output/cbgs_pp_multihead_backbone.onnx
+PfeOnnx: /root/OpenPCDet/output/cbgs_pp_multihead_pfe.onnx
+BackboneOnnx: /root/OpenPCDet/output/cbgs_pp_multihead_backbone.onnx
 
-PfeTrt: /home/ubuntu/OpenPCDet/output/cbgs_pp_multihead_pfe.trt
-BackboneTrt: /home/ubuntu/OpenPCDet/output/cbgs_pp_multihead_backbone.trt
+PfeTrt: /root/OpenPCDet/output/cbgs_pp_multihead_pfe.trt
+BackboneTrt: /root/OpenPCDet/output/cbgs_pp_multihead_backbone.trt
 
-ModelConfig: /home/ubuntu/OpenPCDet/tools/cfgs/nuscenes_models/cbgs_pp_multihead.yaml
+ModelConfig: /root/OpenPCDet/tools/cfgs/nuscenes_models/cbgs_pp_multihead.yaml
 
-InputFile: /home/ubuntu/PointPillars_MultiHead_40FPS/nuscenes_10sweeps_points.txt
-OutputFile: /home/ubuntu/PointPillars_MultiHead_40FPS/nuscenes_10sweeps_boxes.txt
+InputFile: /root/PointPillars_MultiHead_40FPS/nuscenes_10sweeps_points.txt
+OutputFile: /root/PointPillars_MultiHead_40FPS/nuscenes_10sweeps_boxes.txt
