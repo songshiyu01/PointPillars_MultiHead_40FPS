@@ -379,7 +379,7 @@ void PointPillars::DoInference(const float* in_points_array,
     SetDeviceMemoryToZero();
     cudaDeviceSynchronize();
     // [STEP 1] : load pointcloud
-    float* dev_points;
+    float* dev_points = NULL;
     GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_points),
                         in_num_points * kNumPointFeature * sizeof(float))); // in_num_points , 5
     GPU_CHECK(cudaMemset(dev_points, 0, in_num_points * kNumPointFeature * sizeof(float)));
@@ -465,5 +465,5 @@ void PointPillars::DoInference(const float* in_points_array,
     }
     std::cout << "------------------------------------" << std::endl;
     cudaStreamDestroy(stream);
-
+    GPU_CHECK(cudaFree(dev_points));
 }
