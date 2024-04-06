@@ -119,8 +119,8 @@ void PostprocessCuda::DoPostprocessCuda(
     float* cls_pred_12,
     float* cls_pred_34,
     float* cls_pred_5,
-    float* cls_pred_67,
-    float* cls_pred_89,
+    //float* cls_pred_67,
+    //float* cls_pred_89,
 
     const float* box_preds,
    
@@ -141,21 +141,29 @@ void PostprocessCuda::DoPostprocessCuda(
     
     
     //num_anchor_per_cls_ = 32768
+    //GPU_CHECK(cudaMemcpy(&host_score[0 * num_anchor_per_cls_], cls_pred_0, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
+    //GPU_CHECK(cudaMemcpy(&host_score[1 * num_anchor_per_cls_], cls_pred_12, num_anchor_per_cls_ * 2 * 2 * sizeof(float), cudaMemcpyDeviceToHost));
+    //GPU_CHECK(cudaMemcpy(&host_score[5 * num_anchor_per_cls_], cls_pred_34, num_anchor_per_cls_ * 2 * 2 * sizeof(float), cudaMemcpyDeviceToHost));
+    //GPU_CHECK(cudaMemcpy(&host_score[9 * num_anchor_per_cls_], cls_pred_5, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
+    //GPU_CHECK(cudaMemcpy(&host_score[10 * num_anchor_per_cls_], cls_pred_67, num_anchor_per_cls_ * 2 * 2 * sizeof(float), cudaMemcpyDeviceToHost));
+    //GPU_CHECK(cudaMemcpy(&host_score[14 * num_anchor_per_cls_], cls_pred_89, num_anchor_per_cls_ * 2 * 2 * sizeof(float), cudaMemcpyDeviceToHost));
+    //int stride[10] = {0 , 1 , 1 , 5 , 5 , 9 , 10 , 10 , 14 , 14};
+    //int offset[10] = {0 , 0 , 1 , 0 , 1 , 0 , 0 , 1 , 0 , 1};
     GPU_CHECK(cudaMemcpy(&host_score[0 * num_anchor_per_cls_], cls_pred_0, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
-    GPU_CHECK(cudaMemcpy(&host_score[1 * num_anchor_per_cls_], cls_pred_12, num_anchor_per_cls_ * 2 * 2 * sizeof(float), cudaMemcpyDeviceToHost));
-    GPU_CHECK(cudaMemcpy(&host_score[5 * num_anchor_per_cls_], cls_pred_34, num_anchor_per_cls_ * 2 * 2 * sizeof(float), cudaMemcpyDeviceToHost));
-    GPU_CHECK(cudaMemcpy(&host_score[9 * num_anchor_per_cls_], cls_pred_5, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
-    GPU_CHECK(cudaMemcpy(&host_score[10 * num_anchor_per_cls_], cls_pred_67, num_anchor_per_cls_ * 2 * 2 * sizeof(float), cudaMemcpyDeviceToHost));
-    GPU_CHECK(cudaMemcpy(&host_score[14 * num_anchor_per_cls_], cls_pred_89, num_anchor_per_cls_ * 2 * 2 * sizeof(float), cudaMemcpyDeviceToHost));
-    int stride[10] = {0 , 1 , 1 , 5 , 5 , 9 , 10 , 10 , 14 , 14};
-    int offset[10] = {0 , 0 , 1 , 0 , 1 , 0 , 0 , 1 , 0 , 1};
+    GPU_CHECK(cudaMemcpy(&host_score[1 * num_anchor_per_cls_], cls_pred_12, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
+    GPU_CHECK(cudaMemcpy(&host_score[2 * num_anchor_per_cls_], cls_pred_34, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
+    GPU_CHECK(cudaMemcpy(&host_score[3 * num_anchor_per_cls_], cls_pred_5, num_anchor_per_cls_ * sizeof(float), cudaMemcpyDeviceToHost));
+    int stride[4] = {0, 1, 2, 3};
+    int offset[4] = {0, 0, 0, 0};
+
 
     GPU_CHECK(cudaMemcpy(host_box, box_preds, num_class_ * num_anchor_per_cls_ * num_output_box_feature_ * sizeof(float), cudaMemcpyDeviceToHost));
-    
+  
+    //printf("Number of classes: %d.\n", num_class_);
+
     for (int class_idx = 0; class_idx < num_class_; ++ class_idx) {  // hardcode for class_map as {0, 12 , 34 , 5 ,67 ,89}
         // init parameter
         host_filtered_count[class_idx] = 0;
-
 
         // sigmoid filter
         float host_filtered_score[nms_pre_maxsize_]; // 1000
@@ -165,14 +173,14 @@ void PostprocessCuda::DoPostprocessCuda(
 
             float score_upper = 0;
             float score_lower = 0;
-            if (class_idx == 0 || class_idx == 5 ) {
+            //if (class_idx == 0 || class_idx == 5 ) {
+            if (true) {
                 score_upper =  1 / (1 + expf(-host_score[ stride[class_idx] * num_anchor_per_cls_ + anchor_idx ])); // sigmoid function
-
             }
             else {
                 score_upper =  1 / (1 + expf(-host_score[ stride[class_idx] * num_anchor_per_cls_  + anchor_idx * 2  + offset[class_idx]]));
                 score_lower =  1 / (1 + expf(-host_score[ stride[class_idx] * num_anchor_per_cls_  + (num_anchor_per_cls_ + anchor_idx) * 2 + offset[class_idx]]));
-                // printf("up , low : %f ,%f \n", score_upper , score_lower);
+                //printf("up , low : %f ,%f \n", score_upper , score_lower);
             }
 
 
@@ -199,7 +207,7 @@ void PostprocessCuda::DoPostprocessCuda(
             }
 
         }
-        // printf("host_filter_count[%d] = %d\n", class_idx , host_filtered_count[class_idx]);
+        //printf("host_filter_count[%d] = %d\n", class_idx , host_filtered_count[class_idx]);
         if(host_filtered_count[class_idx] <= 0) continue;
 
         // sort boxes (topk)
