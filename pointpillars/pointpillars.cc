@@ -73,6 +73,7 @@ void PointPillars::InitParams()
     kAnchorStrides = 4;
     kNmsPreMaxsize = params["MODEL"]["POST_PROCESSING"]["NMS_CONFIG"]["NMS_PRE_MAXSIZE"].as<int>();
     kNmsPostMaxsize = params["MODEL"]["POST_PROCESSING"]["NMS_CONFIG"]["NMS_POST_MAXSIZE"].as<int>();
+
     //params for initialize anchors
     //Adapt to OpenPCDet
     kAnchorNames = params["CLASS_NAMES"].as<std::vector<std::string>>();
@@ -183,14 +184,19 @@ void PointPillars::DeviceMemoryMalloc() {
 
     GPU_CHECK(cudaMalloc(&rpn_buffers_[0],  kRpnInputSize * sizeof(float)));
 
+    //GPU_CHECK(cudaMalloc(&rpn_buffers_[1],  kNumAnchorPerCls  * sizeof(float)));  //classes
+    //GPU_CHECK(cudaMalloc(&rpn_buffers_[2],  kNumAnchorPerCls  * 2 * 2 * sizeof(float)));
+    //GPU_CHECK(cudaMalloc(&rpn_buffers_[3],  kNumAnchorPerCls  * 2 * 2 * sizeof(float)));
+    //GPU_CHECK(cudaMalloc(&rpn_buffers_[4],  kNumAnchorPerCls  * sizeof(float)));
+    //GPU_CHECK(cudaMalloc(&rpn_buffers_[5],  kNumAnchorPerCls  * 2 * 2 * sizeof(float)));
+    //GPU_CHECK(cudaMalloc(&rpn_buffers_[6],  kNumAnchorPerCls  * 2 * 2 * sizeof(float)));
     GPU_CHECK(cudaMalloc(&rpn_buffers_[1],  kNumAnchorPerCls  * sizeof(float)));  //classes
-    GPU_CHECK(cudaMalloc(&rpn_buffers_[2],  kNumAnchorPerCls  * 2 * 2 * sizeof(float)));
-    GPU_CHECK(cudaMalloc(&rpn_buffers_[3],  kNumAnchorPerCls  * 2 * 2 * sizeof(float)));
+    GPU_CHECK(cudaMalloc(&rpn_buffers_[2],  kNumAnchorPerCls  * sizeof(float)));
+    GPU_CHECK(cudaMalloc(&rpn_buffers_[3],  kNumAnchorPerCls  * sizeof(float)));
     GPU_CHECK(cudaMalloc(&rpn_buffers_[4],  kNumAnchorPerCls  * sizeof(float)));
-    GPU_CHECK(cudaMalloc(&rpn_buffers_[5],  kNumAnchorPerCls  * 2 * 2 * sizeof(float)));
-    GPU_CHECK(cudaMalloc(&rpn_buffers_[6],  kNumAnchorPerCls  * 2 * 2 * sizeof(float)));
     
-    GPU_CHECK(cudaMalloc(&rpn_buffers_[7],  kNumAnchorPerCls * kNumClass * kNumOutputBoxFeature * sizeof(float))); //boxes
+    //GPU_CHECK(cudaMalloc(&rpn_buffers_[6],  kNumAnchorPerCls * kNumClass * kNumOutputBoxFeature * sizeof(float))); //boxes
+    GPU_CHECK(cudaMalloc(&rpn_buffers_[5],  kNumAnchorPerCls * kNumClass * kNumOutputBoxFeature * sizeof(float))); //boxes
 
     // for scatter kernel
     GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_scattered_feature_),
@@ -226,8 +232,8 @@ PointPillars::~PointPillars() {
     GPU_CHECK(cudaFree(rpn_buffers_[3]));
     GPU_CHECK(cudaFree(rpn_buffers_[4]));
     GPU_CHECK(cudaFree(rpn_buffers_[5]));
-    GPU_CHECK(cudaFree(rpn_buffers_[6]));
-    GPU_CHECK(cudaFree(rpn_buffers_[7]));
+    //GPU_CHECK(cudaFree(rpn_buffers_[6]));
+    //GPU_CHECK(cudaFree(rpn_buffers_[7]));
     pfe_context_->destroy();
     backbone_context_->destroy();
     pfe_engine_->destroy();
@@ -331,6 +337,7 @@ void PointPillars::EngineToTRTModel(
     std::ifstream cache(engine_file); 
     gieModelStream << cache.rdbuf();
     cache.close(); 
+
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(g_logger_); 
 
     if (runtime == nullptr) {
@@ -372,7 +379,7 @@ void PointPillars::DoInference(const float* in_points_array,
     SetDeviceMemoryToZero();
     cudaDeviceSynchronize();
     // [STEP 1] : load pointcloud
-    float* dev_points;
+    float* dev_points = NULL;
     GPU_CHECK(cudaMalloc(reinterpret_cast<void**>(&dev_points),
                         in_num_points * kNumPointFeature * sizeof(float))); // in_num_points , 5
     GPU_CHECK(cudaMemset(dev_points, 0, in_num_points * kNumPointFeature * sizeof(float)));
@@ -430,8 +437,8 @@ void PointPillars::DoInference(const float* in_points_array,
         reinterpret_cast<float*>(rpn_buffers_[3]), // [cls]   kNumAnchorPerCls * 2 * 2
         reinterpret_cast<float*>(rpn_buffers_[4]), // [cls]   kNumAnchorPerCls 
         reinterpret_cast<float*>(rpn_buffers_[5]), // [cls]   kNumAnchorPerCls * 2 * 2
-        reinterpret_cast<float*>(rpn_buffers_[6]), // [cls]   kNumAnchorPerCls * 2 * 2
-        reinterpret_cast<float*>(rpn_buffers_[7]), // [boxes] kNumAnchorPerCls * kNumClass * kNumOutputBoxFeature
+        //reinterpret_cast<float*>(rpn_buffers_[6]), // [cls]   kNumAnchorPerCls * 2 * 2
+        //reinterpret_cast<float*>(rpn_buffers_[7]), // [boxes] kNumAnchorPerCls * kNumClass * kNumOutputBoxFeature
         host_box_, 
         host_score_, 
         host_filtered_count_,
@@ -458,5 +465,5 @@ void PointPillars::DoInference(const float* in_points_array,
     }
     std::cout << "------------------------------------" << std::endl;
     cudaStreamDestroy(stream);
-
+    GPU_CHECK(cudaFree(dev_points));
 }

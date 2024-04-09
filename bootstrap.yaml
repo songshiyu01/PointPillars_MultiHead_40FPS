@@ -1,15 +1,23 @@
 BoxFeature: 7
-ScoreThreshold: 0.1
+ScoreThreshold: 0.35
 NmsOverlapThreshold: 0.2
-UseOnnx: false 
+UseOnnx: false
 
-PfeOnnx: /home/ubuntu/OpenPCDet/output/cbgs_pp_multihead_pfe.onnx
-BackboneOnnx: /home/ubuntu/OpenPCDet/output/cbgs_pp_multihead_backbone.onnx
+#PfeOnnx: /home/ubuntu/OpenPCDet/output.mini/cbgs_pp_multihead_pfe.onnx
+#BackboneOnnx: /home/ubuntu/OpenPCDet/output.mini/cbgs_pp_multihead_backbone.onnx
 
-PfeTrt: /home/ubuntu/OpenPCDet/output/cbgs_pp_multihead_pfe.trt
-BackboneTrt: /home/ubuntu/OpenPCDet/output/cbgs_pp_multihead_backbone.trt
+#PfeTrt: /home/ubuntu/OpenPCDet/output.mini/cbgs_pp_multihead_pfe.trt
+#BackboneTrt: /home/ubuntu/OpenPCDet/output.mini/cbgs_pp_multihead_backbone.trt
 
-ModelConfig: /home/ubuntu/OpenPCDet/tools/cfgs/nuscenes_models/cbgs_pp_multihead.yaml
+#ModelConfig: /home/ubuntu/OpenPCDet/tools/cfgs/nuscenes_models/cbgs_pp_multihead.yaml
+
+PfeOnnx: /home/ubuntu/adehome/safeai_ml/output/cbgs_pp_multihead_pfe.onnx
+BackboneOnnx: /home/ubuntu/adehome/safeai_ml/output/cbgs_pp_multihead_backbone.onnx
+
+PfeTrt: /home/ubuntu/adehome/safeai_ml/output/cbgs_pp_multihead_pfe.trt
+BackboneTrt: /home/ubuntu/adehome/safeai_ml/output/cbgs_pp_multihead_backbone.trt
+
+ModelConfig: /home/ubuntu/adehome/safeai_ml/safeai_dnn/object_recognition/openpcdet/config/trainer_configs/point_pillar.yaml
 
 InputFile: /home/ubuntu/PointPillars_MultiHead_40FPS/nuscenes_10sweeps_points.txt
 OutputFile: /home/ubuntu/PointPillars_MultiHead_40FPS/nuscenes_10sweeps_boxes.txt

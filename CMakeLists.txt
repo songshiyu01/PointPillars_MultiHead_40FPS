@@ -6,14 +6,10 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
-option(BUILD_SHARED_LIBS "Build as a shared library"  ON)
-option(USE_DOUBLE        "Use double as kernel_type" OFF)
-#option(TEST              "BUILD TEST"                 ON)
-
+find_package(PCL 1.9 REQUIRED COMPONENTS io common)
 find_package(yaml-cpp REQUIRED)
 find_package(Threads)
 find_package(OpenMP REQUIRED)
-#add_definitions("-DELPP_NO_LOG_TO_FILE")
 
 find_package(CUDA REQUIRED QUIET)
 if (CUDA_VERSION VERSION_LESS "11.0")
@@ -35,8 +31,6 @@ find_library(TENSORRT_LIBRARY_INFER_PLUGIN nvinfer_plugin
 set(TENSORRT_LIBRARY ${TENSORRT_LIBRARY_INFER} ${TENSORRT_LIBRARY_INFER_PLUGIN})
 MESSAGE(STATUS "Find TensorRT libs at ${TENSORRT_LIBRARY}")
 
-#find_library(NVINFER NAMES nvinfer)
-#find_library(NVPARSERS NAMES nvparsers)
 find_library(NVONNXPARSER_LIBRARY NAMES nvonnxparser libnvonnxparser
   HINTS "/usr/local/lib" "{NVONNXTENSORRT_ROOT}/build")
 MESSAGE(STATUS "Find ONNX-TensorRT libs at ${NVONNXPARSER_LIBRARY}")
@@ -66,14 +60,25 @@ target_include_directories(pointpillars_multihead_40fps PUBLIC
 )
 target_link_libraries(pointpillars_multihead_40fps
   pointpillars_multihead_40fps_cuda
-  ${CUDA_cusparse_LIBRARY}
-  #${NVINFER}
-  #  ${NVONNXPARSERS}
-  ${CUDA_LIBRARIES}
-  ${CUDA_CUBLAS_LIBRARIES}
-  ${CUDA_curand_LIBRARY}            
-  ${CUDA_cusparse_LIBRARY}
-  yaml-cpp  
+  yaml-cpp
+)
+
+add_executable(binary_demo app/binary_demo.cc)
+target_include_directories(binary_demo PUBLIC
+  pointpillars
+  ${PCL_INCLUDE_DIRS}
+)
+add_dependencies(binary_demo
+  pointpillars_multihead_40fps
+  pointpillars_multihead_40fps_cuda
+)
+target_link_libraries(binary_demo
+  pointpillars_multihead_40fps
+  pointpillars_multihead_40fps_cuda
+  stdc++fs
+  ${PCL_LIBRARIES}
+  ${TENSORRT_LIBRARY}
+  ${NVONNXPARSER_LIBRARY}
 )
 
 find_package(GTest)
@@ -88,7 +93,10 @@ if(GTEST_LIBRARY)
   target_include_directories(pointpillars_multihead_40fps_tests PUBLIC
     pointpillars
   )
-  add_dependencies(pointpillars_multihead_40fps_tests pointpillars_multihead_40fps_cuda)
+  add_dependencies(pointpillars_multihead_40fps_tests 
+    pointpillars_multihead_40fps
+    pointpillars_multihead_40fps_cuda
+  )
   target_link_libraries(pointpillars_multihead_40fps_tests
     pointpillars_multihead_40fps
     pointpillars_multihead_40fps_cuda

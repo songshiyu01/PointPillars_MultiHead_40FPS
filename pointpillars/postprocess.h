@@ -114,8 +114,8 @@ class PostprocessCuda {
     float* cls_pred_12,
     float* cls_pred_34,
     float* cls_pred_5,
-    float* cls_pred_67,
-    float* cls_pred_89,
+    //float* cls_pred_67,
+    //float* cls_pred_89,
     
     const float* box_preds,
 
